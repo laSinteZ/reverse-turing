@@ -1,5 +1,6 @@
 <template>
   <section class="container">
+    <div class="overlay" v-if="done"><nuxt-link to="/" class="answer" style="color: black">TRY AGAIN</nuxt-link></div>
     <h1 v-if="isWaiting" style="color: red">Please wait for your opponent...</h1>
 
     <h1 v-if="!isWaiting && role=='passive'">Detect, human or robot!</h1>
@@ -37,8 +38,9 @@ export default {
       message: "",
       role: "passive",
       name: "unnamed",
-      turing: true,
+      turing: false,
       neuralReady: false,
+      done: false,
 
       now: 0,
       start: 0
@@ -116,6 +118,7 @@ export default {
       let timestamp = Date.now();
       let result = "";
       let winner = "";
+      this.done = true;
 
       if (this.turing) {
         if (isRobot) {
@@ -143,6 +146,8 @@ export default {
         winner,
         result,
         timestamp,
+        start: this.start*1000,
+        wasted: this.wasted,
         passive: this.messages[
           this.messages.findIndex(x => x.role === "passive")
         ].name,
@@ -150,6 +155,7 @@ export default {
           .name,
         room: this.$route.params.id
       });
+
     }
   },
   mounted() {
@@ -158,8 +164,8 @@ export default {
       .ref("chat/room/" + this.$route.params.id);
     this.role = this.$route.query.role;
     this.name = this.$route.query.name;
-    this.turing = this.$route.query.neural.indexOf("a") != -1;
 
+    if (this.$route.query.neural) this.turing = this.$route.query.neural.indexOf("a") != -1;
     this.turing
       ? window.setTimeout(() => {
           this.neuralReady = true;
@@ -248,5 +254,18 @@ export default {
   min-width: 100px;
   margin: 0.5rem;
   font-size: 16px;
+}
+
+.overlay {
+  height: 100vh;
+  width: 100vw;
+  background: white;
+  z-index: 10000;
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  top: 0;
+  left: 0;
 }
 </style>
