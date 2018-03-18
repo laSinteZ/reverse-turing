@@ -13,21 +13,15 @@
 </template>
 
 <script>
-import { hri } from 'human-readable-ids'
 
 export default {
   components: {
   },
   data() {
     return {
-      room: hri.random(),
-      name: '',
-      neural: 'asdasdas',
-      neuralRate: 70
     }
   },
   mounted() {
-    if (Math.random() * 100 > this.neuralRate) this.neural = "yes";
   }
 }
 </script>
