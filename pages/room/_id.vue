@@ -36,6 +36,7 @@ export default {
 
       chatRef: null,
       message: "",
+      context: [],
       role: "passive",
       name: "unnamed",
       turing: false,
@@ -48,10 +49,10 @@ export default {
   },
   computed: {
     wasted() {
-      return this.now-this.start;
+      return this.now - this.start;
     },
     waitTime() {
-      return (Math.floor(Math.random() * (15 - 7 + 1)) + 7 )*1000;
+      return (Math.floor(Math.random() * (15 - 7 + 1)) + 7) * 1000;
     },
     room() {
       return this.$route.params.id;
@@ -93,16 +94,16 @@ export default {
     },
     receiveMessageFromNeural() {
       let timestamp = Date.now();
-      let context = [];
-      context.push(this.message);
+      this.context.push(this.message);
+      if (this.context.length > 5) this.context.shift();
 
       axios
         .post("https://eora.pw/cakechat_api/v1/actions/get_response", {
-          context,
+          context: this.context,
           emotion: "joy"
         })
         .then(({ data }) => {
-          let waitTime = data.response.length * 300;
+          let waitTime = data.response.length * 50;
           setTimeout(() => {
             this.chatRef.push({
               message: data.response,
@@ -143,14 +144,14 @@ export default {
       }
 
       this.chatRef.push({
-        message: result,
+        message: result
       });
 
       this.resultsRef.push({
         winner,
         result,
         timestamp,
-        start: this.start*1000,
+        start: this.start * 1000,
         wasted: this.wasted,
         passive: this.messages[
           this.messages.findIndex(x => x.role === "passive")
@@ -159,7 +160,6 @@ export default {
           .name,
         room: this.$route.params.id
       });
-
     }
   },
   mounted() {
@@ -169,7 +169,8 @@ export default {
     this.role = this.$route.query.role;
     this.name = this.$route.query.name;
 
-    if (this.$route.query.neural) this.turing = this.$route.query.neural.indexOf("a") != -1;
+    if (this.$route.query.neural)
+      this.turing = this.$route.query.neural.indexOf("a") != -1;
     this.turing
       ? window.setTimeout(() => {
           this.neuralReady = true;
@@ -179,10 +180,15 @@ export default {
     this.$store.dispatch("setMessagesRef", this.chatRef);
     this.$store.dispatch("setAllRoomsRef", this.rommsRef);
 
+    this.$nextTick(function() {
+      let element = document.querySelectorAll("#chat")[0];
+      if (element) element.scrollTop = element.scrollHeight;
+    });
+
     // if(this.role=="active" && this.activeRoom.active == null){
     //   this.$firebase.database().ref("allRooms/"+this.activeRoom['.key']).set({
     //     passive: this.activeRoom.passive,
-    //     connectTimestamp: this.activeRoom.connectTimestamp ? this.activeRoom.connectTimestamp : null , 
+    //     connectTimestamp: this.activeRoom.connectTimestamp ? this.activeRoom.connectTimestamp : null ,
     //     room: this.activeRoom.room,
     //     active: this.name
     //   })
@@ -246,6 +252,7 @@ export default {
 
 .message {
   padding: 4px;
+  max-width:498px;
 }
 
 .answer {
