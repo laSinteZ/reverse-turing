@@ -25,13 +25,16 @@ export default {
       name: '',
       neural: false,
       hash: "no",
-      neuralRate: 70,
+      neuralRate: 30,
       roomsRef: this.$firebase.database().ref("allRooms"),
     }
   },
   mounted() {
     if (Math.random() * 100 > this.neuralRate) this.neural = true;
-    this.neural ? this.hash = "yes" : this.hash = "no"
+    let hashString = Math.random().toString(36).replace(/[^b-z]+/g, '').substr(0, 8);
+    let aIndex = Math.floor(Math.random() * (hashString.length));
+    if(this.neural) hashString = hashString.substr(aIndex, 1) + 'a' + hashString.substr(aIndex + 1)
+    this.hash = hashString
   },
   methods: {
     initiate() {

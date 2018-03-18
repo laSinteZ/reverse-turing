@@ -1,8 +1,14 @@
 <template>
   <section class="container">
     <h1 v-if="isWaiting" style="color: red">Please wait for your opponent...</h1>
-    <h1 v-else>Detect, human or robot!</h1>
-    <div v-if="role === 'passive' && !isWaiting">{{ now }}</div>
+
+    <h1 v-if="!isWaiting && role=='passive'">Detect, human or robot!</h1>
+    <h1 v-if="!isWaiting && role=='passive' && messages.length==0">Send first message!</h1>
+
+    <h1 v-if="!isWaiting && role=='active' ">Make other human think that you are a neural network!</h1>
+    <h1 v-if="!isWaiting && role=='active' && messages.length==0">Wait for their first message!</h1>
+
+    <div v-if="role === 'passive' && !isWaiting">{{ wasted }}</div>
     <div v-if="!isWaiting" class="chat" ref="chat" id="chat">
       <div class="message" v-for="msg in messages" :key="msg.timestamp" :style="msg.role=='passive' ? 'background: #E3F2FD' : 'background: #F1F8E9'">{{ msg.message }}</div>
     </div>
@@ -34,10 +40,14 @@ export default {
       turing: true,
       neuralReady: false,
 
-      now: 0
+      now: 0,
+      start: 0
     };
   },
   computed: {
+    wasted() {
+      return this.now-this.start;
+    },
     waitTime() {
       return (Math.floor(Math.random() * (15 - 7 + 1)) + 7 )*1000;
     },
@@ -105,26 +115,32 @@ export default {
     submitResult(isRobot) {
       let timestamp = Date.now();
       let result = "";
+      let winner = "";
 
       if (this.turing) {
         if (isRobot) {
           alert("You are right! This is a robot!");
           result = "Passive won";
+          winner = "passive";
         } else {
           alert("You are wrong! This is a robot!");
           result = "Bot won";
+          winner = "active";
         }
       } else {
         if (isRobot) {
           alert("You are wrong! This is a human!");
           result = "Active won";
+          winner = "active";
         } else {
           alert("You are right! This is a human!");
           result = "Passive won";
+          winner = "passive";
         }
       }
 
       this.resultsRef.push({
+        winner,
         result,
         timestamp,
         passive: this.messages[
@@ -142,7 +158,7 @@ export default {
       .ref("chat/room/" + this.$route.params.id);
     this.role = this.$route.query.role;
     this.name = this.$route.query.name;
-    this.turing = this.$route.query.neural === "yes";
+    this.turing = this.$route.query.neural.indexOf("a") != -1;
 
     this.turing
       ? window.setTimeout(() => {
@@ -153,6 +169,15 @@ export default {
     this.$store.dispatch("setMessagesRef", this.chatRef);
     this.$store.dispatch("setAllRoomsRef", this.rommsRef);
 
+    // if(this.role=="active" && this.activeRoom.active == null){
+    //   this.$firebase.database().ref("allRooms/"+this.activeRoom['.key']).set({
+    //     passive: this.activeRoom.passive,
+    //     connectTimestamp: this.activeRoom.connectTimestamp ? this.activeRoom.connectTimestamp : null , 
+    //     room: this.activeRoom.room,
+    //     active: this.name
+    //   })
+    // }
+
     window.setInterval(() => {
       this.now = Math.trunc(new Date().getTime() / 1000);
     }, 1000);
@@ -160,10 +185,13 @@ export default {
 
   // kostyl
   watch: {
+    isWaiting: function() {
+      this.start = Math.trunc(new Date().getTime() / 1000);
+    },
     messages: function(val) {
       this.$nextTick(function() {
         let element = document.querySelectorAll("#chat")[0];
-        element.scrollTop = element.scrollHeight;
+        if (element) element.scrollTop = element.scrollHeight;
       });
     }
   }
@@ -182,8 +210,8 @@ export default {
 .chat {
   min-width: 500px;
   border: 1px solid black;
-  min-height: 70vh;
-  max-height: 70vh;
+  min-height: 60vh;
+  max-height: 60vh;
   overflow-y: scroll;
   border-bottom: none;
 }
