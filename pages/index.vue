@@ -7,6 +7,7 @@
     </div>
     <div style="position: absolute; bottom: 0">
       <nuxt-link class="start" to="/results">Results</nuxt-link>
+      <nuxt-link class="start" to="/scoreboard">Scoreboard</nuxt-link>
     </div>
   </section>
 </template>
