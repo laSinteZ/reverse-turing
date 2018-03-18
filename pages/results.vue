@@ -8,7 +8,6 @@
 
 <script>
 import { mapState } from "vuex";
-import axios from "axios";
 
 export default {
   data() {

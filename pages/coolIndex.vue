@@ -1,9 +1,12 @@
 <template>
   <section class="container">
-    <h2>Choose your path</h2>
+    <div class="form">
+      <label style="margin-bottom: 1rem;">Name: <input class="room" v-model="name" type="text" placeholder="enter your name" autofocus/></label>
+      <label>Room ID: <input class="room" v-model="room" type="text" /></label>
+    </div>
     <div>
-      <nuxt-link class="start" style="background: #E3F2FD;" :to="'/active'">Active (cheat &amp; trick people)</nuxt-link>
-      <nuxt-link class="start" style="background: #F1F8E9;" :to="'/passive'">Passive (detect who is who)</nuxt-link>
+      <nuxt-link class="start" style="background: #E3F2FD;" :to="'/room/'+room+'?role=active'+'&name='+name+'&neural='+neural">Enter as active</nuxt-link>
+      <nuxt-link class="start" style="background: #F1F8E9;" :to="'/room/'+room+'?role=passive'+'&name='+name+'&neural='+neural">Enter as passive</nuxt-link>
     </div>
     <div style="position: absolute; bottom: 0">
       <nuxt-link class="start" to="/results">Results</nuxt-link>

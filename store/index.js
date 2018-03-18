@@ -5,7 +5,8 @@ const createStore = () => {
   return new Vuex.Store({
     state: {
       messages: [],
-      results: []
+      results: [],
+      allRooms: []
     },
 
     mutations: {
@@ -17,6 +18,9 @@ const createStore = () => {
       }),
       setResultsRef: firebaseAction(({ bindFirebaseRef }, ref) => {
         bindFirebaseRef("results", ref);
+      }),
+      setAllRoomsRef: firebaseAction(({ bindFirebaseRef }, ref) => {
+        bindFirebaseRef("allRooms", ref);
       })
     }
   });

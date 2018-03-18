@@ -8,29 +8,42 @@
       <label style="margin-bottom: 1rem;">Name: <input class="room" v-model="name" type="text" placeholder="enter your name" autofocus/></label>
     </div>
     <div>
-      <nuxt-link class="start" style="background: #F1F8E9;" :to="'/room/'+room+'?role=passive'+'&name='+name+'&neural='+neural">Enter as passive</nuxt-link>
+      <button @click="initiate" class="start" style="background: #F1F8E9;">Enter as passive</button>
     </div>
   </section>
 </template>
 
 <script>
-import AppLogo from '~/components/AppLogo.vue'
 import { hri } from 'human-readable-ids'
 
 export default {
   components: {
-    AppLogo
   },
   data() {
     return {
       room: hri.random(),
       name: '',
-      neural: 'asdasdas',
-      neuralRate: 70
+      neural: false,
+      hash: "no",
+      neuralRate: 70,
+      roomsRef: this.$firebase.database().ref("allRooms"),
     }
   },
   mounted() {
-    if (Math.random() * 100 > this.neuralRate) this.neural = "yes";
+    if (Math.random() * 100 > this.neuralRate) this.neural = true;
+    this.neural ? this.hash = "yes" : this.hash = "no"
+  },
+  methods: {
+    initiate() {
+      let connectTimestamp = Date.now();
+      this.roomsRef.push({
+        room: this.room,
+        passive: this.name,
+        active: this.neural ? "neural" : null,
+        connectTimestamp
+      })
+      this.$router.push('/room/'+this.room+'?role=passive'+'&name='+this.name+'&neural='+this.hash)
+    }
   }
 }
 </script>
@@ -60,6 +73,7 @@ export default {
   color: black;
   min-width: 100px;
   margin: .5rem;
+  font-size: 16px;
 }
 
 .form {

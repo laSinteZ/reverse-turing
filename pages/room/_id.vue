@@ -1,14 +1,16 @@
 <template>
   <section class="container">
-    <div v-if="role === 'passive'">{{ now }}</div>
-    <div class="chat" ref="chat" id="chat">
+    <h1 v-if="isWaiting" style="color: red">Please wait for your opponent...</h1>
+    <h1 v-else>Detect, human or robot!</h1>
+    <div v-if="role === 'passive' && !isWaiting">{{ now }}</div>
+    <div v-if="!isWaiting" class="chat" ref="chat" id="chat">
       <div class="message" v-for="msg in messages" :key="msg.timestamp" :style="msg.role=='passive' ? 'background: #E3F2FD' : 'background: #F1F8E9'">{{ msg.message }}</div>
     </div>
-    <div class="send" @keyup.enter="sendMessage">
+    <div class="send" @keyup.enter="sendMessage" v-if="!isWaiting">
       <input class="input" v-model="message" type="text" name="message" autofocus :style="role=='passive' ? 'background: #E3F2FD' : 'background: #F1F8E9'"/>
       <button class="button" type="button" style="cursor: pointer" @click="sendMessage">Send</button>
     </div>
-    <div v-if="role === 'passive'" style="position: absolute; bottom: 0">
+    <div v-if="role === 'passive' && !isWaiting" style="position: absolute; bottom: 0">
       <button class="answer" type="button" style="background: green" @click="()=>submitResult(false)">Human</button>
       <button class="answer" type="button" style="background: red" @click="()=>submitResult(true)">Robot</button>
     </div>
@@ -23,16 +25,44 @@ export default {
   data() {
     return {
       resultsRef: this.$firebase.database().ref("results"),
+      rommsRef: this.$firebase.database().ref("allRooms"),
+
       chatRef: null,
       message: "",
       role: "passive",
       name: "unnamed",
       turing: true,
+      neuralReady: false,
 
       now: 0
     };
   },
-  computed: mapState(["messages"]),
+  computed: {
+    waitTime() {
+      return (Math.floor(Math.random() * (15 - 7 + 1)) + 7 )*1000;
+    },
+    room() {
+      return this.$route.params.id;
+    },
+    activeName() {
+      return this.activeRoom[0] && this.activeRoom[0].active
+        ? this.activeRoom[0].active
+        : null;
+    },
+    activeRoom() {
+      return this.allRooms.filter(x => x.room == this.room);
+    },
+    isWaiting() {
+      return (
+        (this.role == "passive" && this.activeName == null) ||
+        (this.role == "passive" && !this.neuralReady)
+      );
+    },
+    ...mapState({
+      messages: state => state.messages,
+      allRooms: state => state.allRooms
+    })
+  },
   methods: {
     sendMessage() {
       if (this.message) {
@@ -55,10 +85,10 @@ export default {
       context.push(this.message);
 
       axios
-        .post(
-          "http://209.205.120.222:8080/cakechat_api/v1/actions/get_response",
-          { context, emotion: "joy" }
-        )
+        .post("https://eora.pw/cakechat_api/v1/actions/get_response", {
+          context,
+          emotion: "joy"
+        })
         .then(({ data }) => {
           let waitTime = data.response.length * 300;
           setTimeout(() => {
@@ -76,34 +106,34 @@ export default {
       let timestamp = Date.now();
       let result = "";
 
-      if(this.turing){
-        if(isRobot) {
+      if (this.turing) {
+        if (isRobot) {
           alert("You are right! This is a robot!");
           result = "Passive won";
+        } else {
+          alert("You are wrong! This is a robot!");
+          result = "Bot won";
         }
-        else {
-          alert("You are wrong! This is a robot!")
-          result = "Bot won"
-        }
-      }
-      else {
-        if(isRobot) {
-          alert("You are wrong! This is a human!")
-          result = "Active won"
-        }
-        else {
-          alert("You are right! This is a human!")
-          result = "Passive won"
+      } else {
+        if (isRobot) {
+          alert("You are wrong! This is a human!");
+          result = "Active won";
+        } else {
+          alert("You are right! This is a human!");
+          result = "Passive won";
         }
       }
 
       this.resultsRef.push({
-          result,
-          timestamp,
-          passive: this.messages[this.messages.findIndex(x => x.role==="passive")].name,
-          active: this.messages[this.messages.findIndex(x => x.role==="active")].name,
-          room: this.$route.params.id
-        });
+        result,
+        timestamp,
+        passive: this.messages[
+          this.messages.findIndex(x => x.role === "passive")
+        ].name,
+        active: this.messages[this.messages.findIndex(x => x.role === "active")]
+          .name,
+        room: this.$route.params.id
+      });
     }
   },
   mounted() {
@@ -112,21 +142,29 @@ export default {
       .ref("chat/room/" + this.$route.params.id);
     this.role = this.$route.query.role;
     this.name = this.$route.query.name;
-    this.turing = this.$route.query.neural === 'yes'
+    this.turing = this.$route.query.neural === "yes";
+
+    this.turing
+      ? window.setTimeout(() => {
+          this.neuralReady = true;
+        }, this.waitTime)
+      : (this.neuralReady = true);
+
     this.$store.dispatch("setMessagesRef", this.chatRef);
+    this.$store.dispatch("setAllRoomsRef", this.rommsRef);
 
     window.setInterval(() => {
-      this.now = Math.trunc((new Date()).getTime() / 1000);
-    },1000);
+      this.now = Math.trunc(new Date().getTime() / 1000);
+    }, 1000);
   },
 
   // kostyl
   watch: {
-    messages: function (val) {
+    messages: function(val) {
       this.$nextTick(function() {
         let element = document.querySelectorAll("#chat")[0];
         element.scrollTop = element.scrollHeight;
-      });      
+      });
     }
   }
 };
@@ -180,8 +218,7 @@ export default {
   text-decoration: none;
   color: white;
   min-width: 100px;
-  margin: .5rem;
+  margin: 0.5rem;
   font-size: 16px;
 }
-
 </style>
