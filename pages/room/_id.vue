@@ -1,6 +1,6 @@
 <template>
   <section class="container">
-    <div key="keppa">{{ now }}</div>
+    <div v-if="role === 'passive'">{{ now }}</div>
     <div class="chat" ref="chat" id="chat">
       <div class="message" v-for="msg in messages" :key="msg.timestamp" :style="msg.role=='passive' ? 'background: #E3F2FD' : 'background: #F1F8E9'">{{ msg.message }}</div>
     </div>
