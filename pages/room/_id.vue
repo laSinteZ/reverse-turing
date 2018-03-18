@@ -11,7 +11,7 @@
 
     <div v-if="role === 'passive' && !isWaiting">{{ wasted }}</div>
     <div v-if="!isWaiting" class="chat" ref="chat" id="chat">
-      <div class="message" v-for="msg in messages" :key="msg.timestamp" :style="msg.role=='passive' ? 'background: #E3F2FD' : 'background: #F1F8E9'">{{ msg.message }}</div>
+      <div class="message" v-for="msg in messages" :key="msg.timestamp" :style="msg.role=='passive' ? 'background: #E3F2FD' : msg.role=='active' ? 'background: #F1F8E9' : 'background: black; color: white;'">{{ msg.message }}</div>
     </div>
     <div class="send" @keyup.enter="sendMessage" v-if="!isWaiting">
       <input class="input" v-model="message" type="text" name="message" autofocus :style="role=='passive' ? 'background: #E3F2FD' : 'background: #F1F8E9'"/>
@@ -122,25 +122,29 @@ export default {
 
       if (this.turing) {
         if (isRobot) {
-          alert("You are right! This is a robot!");
+          alert("You are right! This is a robot! You win 100 points");
           result = "Passive won";
           winner = "passive";
         } else {
-          alert("You are wrong! This is a robot!");
+          alert("You are wrong! This is a robot! You lose 100 points");
           result = "Bot won";
           winner = "active";
         }
       } else {
         if (isRobot) {
-          alert("You are wrong! This is a human!");
+          alert("You are wrong! This is a human! You lose 100 points");
           result = "Active won";
           winner = "active";
         } else {
-          alert("You are right! This is a human!");
+          alert("You are right! This is a human! You win 100 points");
           result = "Passive won";
           winner = "passive";
         }
       }
+
+      this.chatRef.push({
+        message: result,
+      });
 
       this.resultsRef.push({
         winner,
